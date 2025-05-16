@@ -23,8 +23,7 @@ var seps = []string{
 func (b *Bot) PingCmd(c sevcord.Ctx, opts []any) {
 	t1 := time.Now()
 	c.Acknowledge()
-	t2 := time.Now()
-	ping := t2.Sub(t1)
+
 	name := "ping"
 	if len(opts) > 0 && opts != nil {
 		name = opts[0].(string)
@@ -35,7 +34,19 @@ func (b *Bot) PingCmd(c sevcord.Ctx, opts []any) {
 		msg = "Ping! 🏓"
 	case "pingpong":
 		msg = "Ping Pong! 🏓"
+	case "dbping":
+		if opts[1] != "" {
+			b.base.CalcQuery(c, opts[2].(string))
+		} else {
+			for i := 0; i < 20; i++ {
+				b.db.QueryRow("SELECT * FROM elements WHERE id=$1 AND guild=$2 ", 1, c.Guild())
+			}
+		}
+		msg = "🏓 DB Pong!"
 	}
+	t2 := time.Now()
+	ping := t2.Sub(t1)
+
 	milliseconds := float64(ping) / 1000000
 	if milliseconds > 1000 {
 		seconds := milliseconds / 1000
@@ -102,11 +113,16 @@ func (b *Bot) textCommandHandler(c sevcord.Ctx, name string, content string) {
 		} else {
 			b.pages.CatList(c, []any{"name"})
 		}
-	case "ping", "pong", "pingpong":
+	case "ping", "pong", "pingpong", "dbping":
 		if !b.base.CheckCtx(c, "ping") {
 			return
 		}
-		b.PingCmd(c, []any{name})
+		parts := strings.SplitN(content, "|", 2)
+		var query = ""
+		if len(parts) == 2 {
+			query = strings.TrimSpace(parts[1])
+		}
+		b.PingCmd(c, []any{name, query})
 	case "stats":
 		if !b.base.CheckCtx(c, "stats") {
 			return
