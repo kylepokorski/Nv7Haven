@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"math"
+	"math/rand"
 	"sort"
 	"strconv"
 	"strings"
@@ -26,6 +27,9 @@ var noObscure = map[rune]struct{}{
 	']': {},
 	'{': {},
 	'}': {},
+}
+var HintSorts = []sevcord.Choice{
+	sevcord.NewChoice("Random", "random"),
 }
 
 func Obscure(val string) string {
@@ -58,7 +62,7 @@ NOT (id=ANY(SELECT UNNEST(inv) FROM inventories WHERE guild=$1 AND "user"=$2))
 %s
 LIMIT 1`
 
-// Format: prevnext|user|elementid|query|page
+// Format: prevnext|user|elementid|query|randseed|page
 func (p *Pages) HintHandler(c sevcord.Ctx, params string) {
 	parts := strings.Split(params, "|")
 	if c.Author().User.ID != parts[1] {
@@ -66,9 +70,10 @@ func (p *Pages) HintHandler(c sevcord.Ctx, params string) {
 		c.Respond(sevcord.NewMessage("You are not authorized! " + types.RedCircle))
 		return
 	}
-	if len(parts) != 5 {
+	if len(parts) != 6 {
 		return
 	}
+
 	elVal, err := strconv.Atoi(parts[2])
 	if err != nil {
 		p.base.Error(c, err)
@@ -126,6 +131,7 @@ func (p *Pages) HintHandler(c sevcord.Ctx, params string) {
 	var items []struct {
 		Els  pq.Int32Array `db:"els"`
 		Cont bool          `db:"cont"` // Whether user can make it
+
 	}
 	maxHintEls := p.base.PageLength(c)
 	cnt := 0
@@ -134,9 +140,23 @@ func (p *Pages) HintHandler(c sevcord.Ctx, params string) {
 
 	// Apply page
 
-	page, _ := strconv.Atoi(parts[4])
+	page, _ := strconv.Atoi(parts[5])
 	page = ApplyPage(parts[0], page, pagecnt)
-	err = p.db.Select(&items, `SELECT els, els <@ (SELECT inv FROM inventories WHERE guild=$1 AND "user"=$2 LIMIT 1) cont FROM combos WHERE guild=$1 AND result=$3`, c.Guild(), c.Author().User.ID, el)
+
+	var hintseed float64
+	if parts[4] == "" {
+		hintseed = rand.Float64()
+	} else {
+		hintseed, _ = strconv.ParseFloat(parts[4], 64)
+	}
+	randquery := fmt.Sprintf(`SELECT SETSEED(%f)`, hintseed)
+
+	data, err := p.db.Query(randquery)
+	sevcord.Logger.Print(data)
+	if err != nil {
+
+	}
+	err = p.db.Select(&items, `SELECT els, els <@ (SELECT inv FROM inventories WHERE guild=$1 AND "user"=$2 LIMIT 1) cont FROM combos WHERE guild=$1 AND result=$3 ORDER BY RANDOM() OFFSET 1`, c.Guild(), c.Author().User.ID, el)
 	if err != nil {
 		p.base.Error(c, err)
 		return
@@ -215,7 +235,7 @@ func (p *Pages) HintHandler(c sevcord.Ctx, params string) {
 	if strings.HasPrefix(parts[2], "+") {
 		elemparam = "-1"
 	}
-	params = fmt.Sprintf("next|%s|%s|%s|-1", parts[1], elemparam, parts[3])
+	params = fmt.Sprintf("next|%s|%s|%s||-1", parts[1], elemparam, parts[3])
 
 	comps = append(comps, sevcord.NewButton("New Hint", sevcord.ButtonStylePrimary, "hint", params).WithEmoji(sevcord.ComponentEmojiCustom("hint", "932833472396025908", false)))
 	if cnt > maxHintEls {
@@ -223,7 +243,7 @@ func (p *Pages) HintHandler(c sevcord.Ctx, params string) {
 		if strings.HasPrefix(parts[2], "+") || elemparam == "-1" {
 			randelemstr = "+"
 		}
-		comps = append(comps, PageSwitchBtns("hint", fmt.Sprintf("%s|%s%d|%s|%d", parts[1], randelemstr, el, parts[3], page))...)
+		comps = append(comps, PageSwitchBtns("hint", fmt.Sprintf("%s|%s%d|%s|%f|%d", parts[1], randelemstr, el, parts[3], hintseed, page))...)
 	}
 
 	c.Respond(sevcord.NewMessage("").
@@ -247,5 +267,5 @@ func (p *Pages) Hint(c sevcord.Ctx, opts []any) {
 		page = int(opts[2].(int64) - 2)
 	}
 
-	p.HintHandler(c, fmt.Sprintf("next|%s|%d|%s|%d", c.Author().User.ID, el, query, page))
+	p.HintHandler(c, fmt.Sprintf("next|%s|%d|%s||%d", c.Author().User.ID, el, query, page))
 }
