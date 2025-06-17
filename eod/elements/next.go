@@ -104,7 +104,7 @@ func (e *Elements) NextHandler(c sevcord.Ctx, params string) {
 		Title("Your next element is "+nameMap[int(res)]).
 		Description(desc.String()).
 		Color(elem.Color).
-		Footer(fmt.Sprintf("%s %s", humanize.Comma(int64(itemCnt)), english.PluralWord(itemCnt, "Combo", "Combos")), "")
+Footer(fmt.Sprintf("%s %s • Element #%d", humanize.Comma(int64(itemCnt)), english.PluralWord(itemCnt, "Combo", "Combos")),elem.ID), "")
 	if elem.Image != "" {
 		emb = emb.Thumbnail(elem.Image)
 	}

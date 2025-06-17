@@ -190,7 +190,7 @@ func (e *Elements) HintHandler(c sevcord.Ctx, params string) {
 		Title("Hints for "+nameMap[int(el)]).
 		Description(description.String()).
 		Color(elem.Color).
-		Footer(fmt.Sprintf("%s %s • You%s have this", humanize.Comma(int64(itemCnt)), english.PluralWord(itemCnt, "Hint", "Hints"), dontHave), "")
+Footer(fmt.Sprintf("%s %s • You%s have this • Element #%d", humanize.Comma(int64(itemCnt)),english.PluralWord(itemCnt, "Hint", "Hints"), dontHave, el), "")
 
 	if elem.Image != "" {
 		emb = emb.Thumbnail(elem.Image)
