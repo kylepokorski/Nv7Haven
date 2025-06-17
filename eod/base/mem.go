@@ -8,11 +8,8 @@ import (
 )
 
 func (b *Base) getMem(c sevcord.Ctx) *types.ServerMem {
-	return b.getMemGuild(c.Guild())
-}
-func (b *Base) getMemGuild(guild string) *types.ServerMem {
 	b.lock.RLock()
-	v, exists := b.mem[guild]
+	v, exists := b.mem[c.Guild()]
 	b.lock.RUnlock()
 	if exists {
 		return v
@@ -24,20 +21,17 @@ func (b *Base) getMemGuild(guild string) *types.ServerMem {
 	}
 
 	b.lock.Lock()
-	b.mem[guild] = v
+	b.mem[c.Guild()] = v
 	b.lock.Unlock()
 
 	return v
 }
-func (b *Base) SaveCombCacheUser(user string, guild string, comb types.CombCache) {
-	mem := b.getMemGuild(guild)
-	mem.Lock()
-	mem.CombCache[user] = comb
-	mem.Unlock()
-}
-func (b *Base) SaveCombCache(c sevcord.Ctx, comb types.CombCache) {
 
-	b.SaveCombCacheUser(c.Author().User.ID, c.Guild(), comb)
+func (b *Base) SaveCombCache(c sevcord.Ctx, comb types.CombCache) {
+	mem := b.getMem(c)
+	mem.Lock()
+	mem.CombCache[c.Author().User.ID] = comb
+	mem.Unlock()
 }
 
 func (b *Base) GetCombCache(c sevcord.Ctx) (types.CombCache, types.Resp) {

@@ -113,8 +113,6 @@ func (e *Polls) elemCreate(p *types.Poll, news func(string)) (err error) {
 		if err != nil {
 			return
 		}
-		// Save combcache
-		e.base.SaveCombCacheUser(p.Creator, p.Guild, types.CombCache{Elements: els, Result: (id)})
 	} else {
 		id = int(p.Data["result"].(float64))
 
@@ -148,7 +146,6 @@ func (e *Polls) elemCreate(p *types.Poll, news func(string)) (err error) {
 		}
 	}
 
-	e.base.SaveCombCacheUser(p.Creator, p.Guild, types.CombCache{Elements: els, Result: (id)})
 	// Create combo
 	_, err = tx.Exec(`INSERT INTO combos (guild, els, result, createdon) VALUES ($1, $2, $3, $4)`, p.Guild, pq.Array(els), id, time.Now())
 	if err != nil {
