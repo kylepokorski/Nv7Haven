@@ -289,26 +289,30 @@ func (b *Bot) textCommandHandler(c sevcord.Ctx, name string, content string) {
 		}
 		if len(prefixSplit) == 1 {
 			// no second arg, assume first arg is the element
-			id, ok := b.getElementId(c, prefixSplit[1])
+			var item = strings.TrimSpace(strings.Split(prefixSplit[0], "|")[0])
+			id, ok := b.getElementId(c, item)
 			if !ok {
 				return
 			}
 			b.elements.ColorCmd(c, []any{id, strings.TrimSpace(parts[1])})
+			return
 		}
 		// check for coloring element/category/query
+		var item = strings.TrimSpace(strings.Split(prefixSplit[1], "|")[0])
 		switch strings.ToLower(strings.TrimSpace(prefixSplit[0])) {
 		case "e", "element":
-			id, ok := b.getElementId(c, prefixSplit[1])
+
+			id, ok := b.getElementId(c, item)
 			if !ok {
 				return
 			}
 			b.elements.ColorCmd(c, []any{id, strings.TrimSpace(parts[1])})
 
 		case "c", "cat", "category":
-			b.categories.ColorCmd(c, []any{strings.TrimSpace(prefixSplit[1]), strings.TrimSpace(parts[1])})
+			b.categories.ColorCmd(c, []any{item, strings.TrimSpace(parts[1])})
 
 		case "q", "query":
-			b.queries.ColorCmd(c, []any{strings.TrimSpace(prefixSplit[1]), strings.TrimSpace(parts[1])})
+			b.queries.ColorCmd(c, []any{item, strings.TrimSpace(parts[1])})
 
 		case "":
 			// no text was provided before the separator, invalid
