@@ -241,6 +241,9 @@ func (b *Polls) makeQueryText(name string, typ string, guild string, data map[st
 	case "op":
 		kind = "Operation"
 		description = "*Left*: **" + data["left"].(string) + "**\n*Operator*: `" + data["op"].(string) + "`\n*Right*: **" + data["right"].(string) + "**"
+	case "inputs":
+		kind = "Inputs"
+		description = "*Query*: **" + data["query"].(string) + "**"
 	}
 
 	return kind, "**" + name + "**\n" + description, nil

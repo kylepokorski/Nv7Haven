@@ -291,3 +291,15 @@ func (q *Queries) CreateOperationCmd(c sevcord.Ctx, opts []any) {
 	}
 	q.createCmd(c, opts[0].(string), types.QueryKindOperation, map[string]any{"left": nameLeft, "right": nameRight, "op": opts[3].(string)})
 }
+
+func (q *Queries) CreateInputsCmd(c sevcord.Ctx, opts []any) {
+	c.Acknowledge()
+	// Get name
+	var name string
+	err := q.db.Get(&name, "SELECT name FROM queries WHERE LOWER(name)=$1", strings.ToLower(opts[1].(string)))
+	if err != nil {
+		q.base.Error(c, err, "Query **"+opts[1].(string)+"** doesn't exist!")
+		return
+	}
+	q.createCmd(c, opts[0].(string), types.QueryKindInputs, map[string]any{"query": name})
+}

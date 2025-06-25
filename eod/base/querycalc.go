@@ -189,12 +189,24 @@ func (b *Base) CalcQuery(ctx sevcord.Ctx, name string) (*types.Query, bool) {
 					out[elem] = struct{}{}
 				}
 			}
-		}
 
-		// Save
-		query.Elements = make([]int, 0, len(out))
-		for elem := range out {
-			query.Elements = append(query.Elements, elem)
+			// Save
+			query.Elements = make([]int, 0, len(out))
+			for elem := range out {
+				query.Elements = append(query.Elements, elem)
+			}
+		}
+	case types.QueryKindInputs:
+		// Get query elems
+		parent, ok := b.CalcQuery(ctx, query.Data["query"].(string))
+		if !ok {
+			return nil, false
+		}
+		// Calc
+		err := b.db.Select(&query.Elements, "SELECT DISTINCT(UNNEST(els)) AS inputs FROM combos WHERE result=ANY($1) AND guild=$2", pq.Array(parent.Elements), ctx.Guild())
+		if err != nil {
+			b.Error(ctx, err)
+			return nil, false
 		}
 	}
 

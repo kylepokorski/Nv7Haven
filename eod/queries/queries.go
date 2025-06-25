@@ -190,6 +190,14 @@ func (q *Queries) Init() {
 					sevcord.NewChoice("Difference", "difference"),
 				),
 		),
+		sevcord.NewSlashCommand(
+			"inputs",
+			"Create a query that contains all the inputs of every element from another query!",
+			q.CreateInputsCmd,
+			sevcord.NewOption("name", "The name of the query", sevcord.OptionKindString, true),
+			sevcord.NewOption("parent", "The query to contain the inputs of!", sevcord.OptionKindString, true).
+				AutoComplete(q.Autocomplete),
+		),
 	))
 	q.s.RegisterSlashCommand(sevcord.NewSlashCommand(
 		"path",

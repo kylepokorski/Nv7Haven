@@ -133,6 +133,10 @@ func (q *Queries) Info(ctx sevcord.Ctx, opts []any) {
 		emb = emb.AddField("🔤 Left", qu.Data["left"].(string), true)
 		emb = emb.AddField("🔤 Right", qu.Data["right"].(string), true)
 
+	case types.QueryKindInputs:
+		emb = emb.AddField("Kind", "Inputs", true)
+		emb = emb.AddField("🧮 Query", qu.Data["query"].(string), true)
+
 	}
 
 	// Respond
