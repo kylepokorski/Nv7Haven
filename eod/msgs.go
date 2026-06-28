@@ -17,6 +17,7 @@ var seps = []string{
 	"+",
 	",",
 	"plus",
+	"-", // subtraction
 }
 
 func (b *Bot) PingCmd(c sevcord.Ctx, opts []any) {
@@ -196,6 +197,9 @@ func (b *Bot) textCommandHandler(c sevcord.Ctx, name string, content string) {
 		els := make([]int, 0)
 
 		for sep := range seps {
+			if seps[sep] == "-" {
+				continue
+			}
 			if strings.Contains(parts[1], seps[sep]) {
 				vals := strings.Split(parts[1], seps[sep])
 				inputs = append(inputs, vals...)
@@ -517,6 +521,7 @@ func (b *Bot) messageHandler(c sevcord.Ctx, content string) {
 		return
 	}
 	elems := make([]string, 0)
+	commutative := true
 	if strings.TrimSpace(content)[0] == '+' || strings.TrimSpace(content)[0] == ',' {
 
 		content = strings.TrimSpace(content)[1:]
@@ -547,6 +552,9 @@ func (b *Bot) messageHandler(c sevcord.Ctx, content string) {
 				if strs[len(strs)-1] != " " {
 					rawsplit[1] = strs[len(strs)-1] + rawsplit[1]
 				}
+				if sep == "-" {
+					commutative = false
+				}
 
 				elems = append(elems, rawsplit[1])
 
@@ -563,7 +571,7 @@ func (b *Bot) messageHandler(c sevcord.Ctx, content string) {
 				}
 			}
 
-			b.combineElements(c, elems)
+			b.combineElements(c, elems, commutative)
 			return
 		}
 	}
@@ -576,6 +584,6 @@ func (b *Bot) messageHandler(c sevcord.Ctx, content string) {
 	if len(elems) == 1 {
 		elems = append(elems, content)
 	}
-	b.combineElements(c, elems)
+	b.combineElements(c, elems, true)
 
 }

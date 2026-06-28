@@ -23,11 +23,11 @@ func (b *Bot) MsgSugElement(c sevcord.Ctx, val string) {
 	}
 	b.elements.Suggest(c, []any{any(val), nil})
 }
-func (b *Bot) combineElements(c sevcord.Ctx, elements []string) {
+func (b *Bot) combineElements(c sevcord.Ctx, elements []string, commutative bool) {
 
 	ids, ok := b.getElementIds(c, elements)
 	if ok {
-		b.elements.Combine(c, ids)
+		b.elements.Combine(c, ids, commutative)
 	}
 
 }

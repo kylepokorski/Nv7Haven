@@ -28,7 +28,7 @@ type comboRes struct {
 	Cont bool   `db:"cont"`
 }
 
-func (e *Elements) Combine(c sevcord.Ctx, ids []int64) {
+func (e *Elements) Combine(c sevcord.Ctx, ids []int64, commutative bool) {
 	c.Acknowledge()
 	e.base.IncrementCommandStat(c, "combine")
 
@@ -70,7 +70,9 @@ func (e *Elements) Combine(c sevcord.Ctx, ids []int64) {
 	for i := range ids {
 		items[i] = int(ids[i])
 	}
-	sort.Ints(items)
+	if commutative {
+		sort.Ints(items)
+	}
 
 	// Save combcache
 	e.base.SaveCombCache(c, types.CombCache{Elements: items, Result: -1})
